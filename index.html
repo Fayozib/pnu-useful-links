@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNU Useful Links</title>
+<meta name="description" content="Useful websites for Pusan National University students">
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --text: #1d2433; --muted: #5d6779;
+    --accent: #1f5fbf; --accent-soft: #e6eefb; --border: #e2e6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c; --card: #1b2029; --text: #e8ebf2; --muted: #9aa3b5;
+      --accent: #6ea3ff; --accent-soft: #1f2a3d; --border: #2a3140;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  header h1 { margin: 0 0 4px; font-size: 1.9rem; }
+  header p { margin: 0; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0; }
+  .controls input {
+    flex: 1 1 240px; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 1rem;
+  }
+  .langs { display: flex; gap: 6px; }
+  .langs button {
+    padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); cursor: pointer; font-size: .95rem;
+  }
+  .langs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  section h2 { font-size: 1.15rem; margin: 28px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  a.card {
+    display: block; padding: 14px 16px; border-radius: 12px; text-decoration: none;
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    transition: transform .12s, border-color .12s;
+  }
+  a.card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .card .name { font-weight: 600; color: var(--accent); }
+  .card .desc { color: var(--muted); font-size: .92rem; margin-top: 4px; }
+  .card .url { font-size: .8rem; color: var(--muted); margin-top: 8px; opacity: .8; word-break: break-all; }
+  .empty { color: var(--muted); margin-top: 24px; }
+  footer { margin-top: 48px; color: var(--muted); font-size: .9rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🔗 PNU Useful Links</h1>
+    <p id="subtitle"></p>
+  </header>
+
+  <div class="controls">
+    <input id="search" type="search" aria-label="Search">
+    <div class="langs">
+      <button data-lang="en">EN</button>
+      <button data-lang="ko">한국어</button>
+      <button data-lang="uz">O'zbek</button>
+    </div>
+  </div>
+
+  <main id="list"></main>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const ui = {
+  en: {
+    subtitle: "Useful websites for Pusan National University students — especially international and CS&E students.",
+    search: "Search sites…",
+    empty: "No sites found.",
+    footer: 'Missing a useful site? <a href="https://github.com/Fayozib/pnu-useful-links">Contribute on GitHub</a>.'
+  },
+  ko: {
+    subtitle: "부산대학교 학생(특히 유학생과 정보컴퓨터공학부 학생)을 위한 유용한 사이트 모음",
+    search: "사이트 검색…",
+    empty: "검색 결과가 없습니다.",
+    footer: '유용한 사이트가 빠졌나요? <a href="https://github.com/Fayozib/pnu-useful-links">GitHub에서 기여하기</a>'
+  },
+  uz: {
+    subtitle: "Pusan Milliy Universiteti talabalari (ayniqsa chet ellik va CS&E talabalari) uchun foydali saytlar.",
+    search: "Saytlarni qidirish…",
+    empty: "Hech narsa topilmadi.",
+    footer: 'Foydali sayt yetishmayaptimi? <a href="https://github.com/Fayozib/pnu-useful-links">GitHubda hissa qo\'shing</a>.'
+  }
+};
+
+const categories = {
+  pnu:     { en: "🏫 PNU — University", ko: "🏫 부산대학교", uz: "🏫 PNU — Universitet" },
+  coding:  { en: "💻 Coding & Algorithms", ko: "💻 코딩 · 알고리즘", uz: "💻 Dasturlash va algoritmlar" },
+  learn:   { en: "📚 Learning", ko: "📚 학습", uz: "📚 O'qish" },
+  career:  { en: "🏆 Contests, Activities & Jobs", ko: "🏆 공모전 · 대외활동 · 채용", uz: "🏆 Tanlovlar, faoliyat va ish" },
+  life:    { en: "🌏 Life in Busan", ko: "🌏 부산 생활", uz: "🌏 Busanda hayot" },
+  it:      { en: "🚀 Busan IT Ecosystem", ko: "🚀 부산 IT 생태계", uz: "🚀 Busan IT ekotizimi" }
+};
+
+const links = [
+  { cat: "pnu", name: "PLATO", url: "https://plato.pusan.ac.kr",
+    en: "LMS — lectures, assignments, notices", ko: "강의, 과제, 공지 (LMS)", uz: "LMS — darslar, topshiriqlar, e'lonlar" },
+  { cat: "pnu", name: "PNU Student Support System", url: "https://onestop.pusan.ac.kr",
+    en: "Course registration, grades, scholarships", ko: "수강신청, 성적, 장학금", uz: "Fanlarga yozilish, baholar, stipendiyalar" },
+  { cat: "pnu", name: "PNU CSE Department", url: "https://cse.pusan.ac.kr",
+    en: "Department notices, contests, research labs", ko: "학부 공지, 공모전, 연구실 정보", uz: "Bo'lim e'lonlari, tanlovlar, laboratoriyalar" },
+  { cat: "pnu", name: "PNU Library", url: "https://lib.pusan.ac.kr",
+    en: "Book search, study room booking", ko: "도서 검색, 스터디룸 예약", uz: "Kitob qidirish, o'quv xonasini band qilish" },
+  { cat: "pnu", name: "PNU Main Website", url: "https://www.pusan.ac.kr",
+    en: "University-wide news and announcements", ko: "대학 전체 소식과 공지", uz: "Universitet yangiliklari va e'lonlari" },
+  { cat: "pnu", name: "Everytime", url: "https://everytime.kr",
+    en: "Student community, course reviews, timetable", ko: "학생 커뮤니티, 강의평, 시간표", uz: "Talabalar jamoasi, dars sharhlari, jadval" },
+
+  { cat: "coding", name: "Baekjoon (BOJ)", url: "https://www.acmicpc.net",
+    en: "Algorithm problems — the standard in Korea", ko: "알고리즘 문제 풀이 사이트", uz: "Algoritm masalalari — Koreyada standart" },
+  { cat: "coding", name: "solved.ac", url: "https://solved.ac",
+    en: "Difficulty tiers & progress tracking for BOJ", ko: "백준 난이도 · 티어 확인", uz: "BOJ uchun daraja va progress" },
+  { cat: "coding", name: "Programmers", url: "https://programmers.co.kr",
+    en: "Coding tests used by Korean IT companies", ko: "기업 코딩테스트 연습", uz: "Koreys IT kompaniyalari kodlash testlari" },
+  { cat: "coding", name: "LeetCode", url: "https://leetcode.com",
+    en: "Interview prep for global companies", ko: "글로벌 기업 면접 대비", uz: "Xalqaro kompaniyalar intervyusiga tayyorgarlik" },
+  { cat: "coding", name: "GitHub", url: "https://github.com",
+    en: "Host projects and build a portfolio", ko: "프로젝트 관리와 포트폴리오", uz: "Loyihalar va portfolio" },
+
+  { cat: "learn", name: "Inflearn", url: "https://www.inflearn.com",
+    en: "Korean programming courses", ko: "프로그래밍 온라인 강의", uz: "Koreyscha dasturlash kurslari" },
+  { cat: "learn", name: "K-MOOC", url: "https://www.kmooc.kr",
+    en: "Free university-level online courses", ko: "무료 대학 온라인 강좌", uz: "Bepul universitet darajasidagi kurslar" },
+
+  { cat: "career", name: "Linkareer", url: "https://linkareer.com",
+    en: "Activities, contests, internships", ko: "대외활동, 공모전, 인턴", uz: "Faoliyatlar, tanlovlar, amaliyot" },
+  { cat: "career", name: "Wevity", url: "https://www.wevity.com",
+    en: "Contests and hackathons", ko: "공모전, 해커톤", uz: "Tanlovlar va hackathonlar" },
+  { cat: "career", name: "Wanted", url: "https://www.wanted.co.kr",
+    en: "IT jobs & internships", ko: "IT 채용 · 인턴", uz: "IT ish va amaliyot" },
+  { cat: "career", name: "Saramin", url: "https://www.saramin.co.kr",
+    en: "Job portal", ko: "채용 포털", uz: "Ish qidirish portali" },
+  { cat: "career", name: "JobKorea", url: "https://www.jobkorea.co.kr",
+    en: "Job portal", ko: "채용 포털", uz: "Ish qidirish portali" },
+
+  { cat: "life", name: "HiKorea", url: "https://www.hikorea.go.kr",
+    en: "Visa, residence card, immigration", ko: "비자, 외국인등록, 체류", uz: "Viza, ARC, migratsiya ishlari" },
+  { cat: "life", name: "Study in Korea", url: "https://www.studyinkorea.go.kr",
+    en: "GKS scholarship & study info", ko: "GKS 장학금 · 유학 정보", uz: "GKS stipendiyasi va o'qish haqida" },
+  { cat: "life", name: "Busan Metropolitan City", url: "https://www.busan.go.kr",
+    en: "City news and programs", ko: "부산시 소식과 프로그램", uz: "Shahar yangiliklari va dasturlari" },
+  { cat: "life", name: "Visit Busan", url: "https://www.visitbusan.net",
+    en: "Travel & things to do", ko: "부산 관광 정보", uz: "Sayohat va dam olish" },
+  { cat: "life", name: "Naver Map", url: "https://map.naver.com",
+    en: "Best map & transit app in Korea", ko: "지도 · 대중교통 길찾기", uz: "Koreyadagi eng yaxshi xarita va transport" },
+  { cat: "life", name: "Kakao Map", url: "https://map.kakao.com",
+    en: "Map & transit alternative", ko: "지도 · 길찾기", uz: "Xarita va transport (muqobil)" },
+
+  { cat: "it", name: "BUSANIT", url: "https://www.busanit.or.kr",
+    en: "Busan IT Industry Promotion Agency — programs & events", ko: "부산정보산업진흥원 — 프로그램 · 행사", uz: "Busan IT sanoati agentligi — dasturlar va tadbirlar" }
+];
+
+let lang = "en";
+try { lang = localStorage.getItem("pnu-lang") || "en"; } catch (e) {}
+
+const listEl = document.getElementById("list");
+const searchEl = document.getElementById("search");
+
+function render() {
+  document.documentElement.lang = lang;
+  document.getElementById("subtitle").textContent = ui[lang].subtitle;
+  document.getElementById("footer").innerHTML = ui[lang].footer;
+  searchEl.placeholder = ui[lang].search;
+  document.querySelectorAll(".langs button").forEach(b =>
+    b.classList.toggle("active", b.dataset.lang === lang));
+
+  const q = searchEl.value.trim().toLowerCase();
+  listEl.innerHTML = "";
+  let shown = 0;
+
+  for (const [key, title] of Object.entries(categories)) {
+    const items = links.filter(l => l.cat === key &&
+      (!q || [l.name, l.url, l.en, l.ko, l.uz].join(" ").toLowerCase().includes(q)));
+    if (!items.length) continue;
+    shown += items.length;
+
+    const sec = document.createElement("section");
+    sec.innerHTML = `<h2>${title[lang]}</h2><div class="grid"></div>`;
+    const grid = sec.querySelector(".grid");
+    for (const l of items) {
+      const a = document.createElement("a");
+      a.className = "card"; a.href = l.url; a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = `<div class="name"></div><div class="desc"></div><div class="url"></div>`;
+      a.querySelector(".name").textContent = l.name;
+      a.querySelector(".desc").textContent = l[lang];
+      a.querySelector(".url").textContent = l.url.replace(/^https?:\/\//, "");
+      grid.appendChild(a);
+    }
+    listEl.appendChild(sec);
+  }
+  if (!shown) listEl.innerHTML = `<p class="empty">${ui[lang].empty}</p>`;
+}
+
+document.querySelectorAll(".langs button").forEach(b => b.addEventListener("click", () => {
+  lang = b.dataset.lang;
+  try { localStorage.setItem("pnu-lang", lang); } catch (e) {}
+  render();
+}));
+searchEl.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
